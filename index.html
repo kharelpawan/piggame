@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pig Game</title>
+    <link href="https://fonts.googleapis.com/css?family=Lato:100,300,400,700" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            font-weight: 300;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #555;
+        }
+
+        .wrapper {
+            background: white;
+            width: 90%;
+            max-width: 1200px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            position: relative;
+        }
+
+        .player-panel {
+            padding: 50px 30px;
+            text-align: center;
+            background: linear-gradient(to bottom, #f7f7f7 0%, #fff 100%);
+            position: relative;
+        }
+
+        .player-panel.active {
+            background: linear-gradient(to bottom, #f0f0ff 0%, #fff 100%);
+        }
+
+        .player-panel.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: #667eea;
+        }
+
+        .player-name {
+            font-size: 28px;
+            font-weight: 100;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            color: #667eea;
+        }
+
+        .player-panel.active .player-name {
+            font-weight: 400;
+        }
+
+        .player-score {
+            font-size: 80px;
+            font-weight: 100;
+            color: #667eea;
+            margin-bottom: 40px;
+        }
+
+        .player-current-box {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 0 auto;
+            max-width: 150px;
+        }
+
+        .player-current-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .player-current-score {
+            font-size: 36px;
+            font-weight: 300;
+        }
+
+        .controls {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 40px;
+            background: #f9f9f9;
+            position: relative;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Lato', sans-serif;
+            font-size: 16px;
+            text-transform: uppercase;
+            font-weight: 400;
+            color: #555;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-new {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-roll {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-hold {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .dice {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            font-size: 60px;
+            line-height: 80px;
+            text-align: center;
+        }
+
+        .dice.show {
+            display: block;
+        }
+
+        .rules {
+            grid-column: 1 / -1;
+            padding: 30px;
+            background: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+
+        .rules h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-weight: 300;
+            text-transform: uppercase;
+        }
+
+        .rules p {
+            line-height: 1.8;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .winner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            text-align: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .winner.show {
+            display: block;
+        }
+
+        .winner h1 {
+            color: #667eea;
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .wrapper {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .wrapper {
+                grid-template-columns: 1fr;
+            }
+            .player-score {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+    <div class="winner" id="winner">
+        <h1>🎉 <span id="winnerName"></span> Wins!</h1>
+        <button class="btn btn-new" onclick="newGame()">Play Again</button>
+    </div>
+
+    <div class="wrapper">
+        <div class="player-panel active" id="player-0">
+            <div class="player-name" id="name-0">Player 1</div>
+            <div class="player-score" id="score-0">0</div>
+            <div class="player-current-box">
+                <div class="player-current-label">Round Score</div>
+                <div class="player-current-score" id="current-0">0</div>
+            </div>
+        </div>
+
+        <div class="player-panel" id="player-1">
+            <div class="player-name" id="name-1">Player 2</div>
+            <div class="player-score" id="score-1">0</div>
+            <div class="player-current-box">
+                <div class="player-current-label">Round Score</div>
+                <div class="player-current-score" id="current-1">0</div>
+            </div>
+        </div>
+
+        <div class="player-panel" id="player-2">
+            <div class="player-name" id="name-2">Player 3</div>
+            <div class="player-score" id="score-2">0</div>
+            <div class="player-current-box">
+                <div class="player-current-label">Round Score</div>
+                <div class="player-current-score" id="current-2">0</div>
+            </div>
+        </div>
+
+        <div class="player-panel" id="player-3">
+            <div class="player-name" id="name-3">Player 4</div>
+            <div class="player-score" id="score-3">0</div>
+            <div class="player-current-box">
+                <div class="player-current-label">Round Score</div>
+                <div class="player-current-score" id="current-3">0</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-new" onclick="newGame()">
+                <span>➕</span>
+                <span>New Game</span>
+            </button>
+            <button class="btn btn-roll" onclick="rollDice()">
+                <span>🎲</span>
+                <span>Roll Dice</span>
+            </button>
+            <button class="btn btn-hold" onclick="holdScore()">
+                <span>💾</span>
+                <span>Hold Score</span>
+            </button>
+            <div class="dice" id="dice"></div>
+        </div>
+
+        <div class="rules">
+            <h2>📋 Game Rules</h2>
+            <p>
+                <strong>Objective:</strong> Be the first player to reach 100 points!<br><br>
+                <strong>How to Play:</strong><br>
+                • Each turn, roll the dice as many times as you want. Each roll adds to your round score.<br>
+                • But be careful! If you roll a 1, you lose all points from that round and it's the next player's turn.<br>
+                • Click "Hold Score" to add your round score to your total score. Then it's the next player's turn.<br>
+                • The first player to reach 100 points wins the game!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let scores = [0, 0, 0, 0];
+        let roundScores = [0, 0, 0, 0];
+        let activePlayer = 0;
+        let gamePlaying = true;
+
+        function newGame() {
+            scores = [0, 0, 0, 0];
+            roundScores = [0, 0, 0, 0];
+            activePlayer = 0;
+            gamePlaying = true;
+
+            document.getElementById('dice').classList.remove('show');
+            document.getElementById('winner').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`score-${i}`).textContent = '0';
+                document.getElementById(`current-${i}`).textContent = '0';
+                document.getElementById(`player-${i}`).classList.remove('active');
+            }
+
+            document.getElementById('player-0').classList.add('active');
+        }
+
+        function rollDice() {
+            if (gamePlaying) {
+                const dice = Math.floor(Math.random() * 6) + 1;
+                const diceDOM = document.getElementById('dice');
+                
+                diceDOM.textContent = dice;
+                diceDOM.classList.add('show');
+
+                if (dice !== 1) {
+                    roundScores[activePlayer] += dice;
+                    document.getElementById(`current-${activePlayer}`).textContent = roundScores[activePlayer];
+                } else {
+                    nextPlayer();
+                }
+            }
+        }
+
+        function holdScore() {
+            if (gamePlaying) {
+                scores[activePlayer] += roundScores[activePlayer];
+                document.getElementById(`score-${activePlayer}`).textContent = scores[activePlayer];
+
+                if (scores[activePlayer] >= 100) {
+                    gamePlaying = false;
+                    document.getElementById('winnerName').textContent = document.getElementById(`name-${activePlayer}`).textContent;
+                    document.getElementById('winner').classList.add('show');
+                    document.getElementById('overlay').classList.add('show');
+                } else {
+                    nextPlayer();
+                }
+            }
+        }
+
+        function nextPlayer() {
+            roundScores[activePlayer] = 0;
+            document.getElementById(`current-${activePlayer}`).textContent = '0';
+            document.getElementById(`player-${activePlayer}`).classList.remove('active');
+            
+            activePlayer = (activePlayer + 1) % 4;
+            document.getElementById(`player-${activePlayer}`).classList.add('active');
+            
+            document.getElementById('dice').classList.remove('show');
+        }
+
+        newGame();
+    </script>
+</body>
+</html>
